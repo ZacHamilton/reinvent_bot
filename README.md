@@ -2,7 +2,7 @@
 
 ⚠️ *Use at your own risk! Not affiliated with Amazon Web Services, just a huge fan.*
 
-## This repo contains code which provides 2 pieces of functionality
+## This repo contains code which provides:
 
 1. **Download re:Invent sessions to a text file** - Modified to pull for re:Invent 2022.  With over 1,400 sessions offered, it's difficult to use the session catalog and feel comfortable that you've seen everything you may want to attend. This script will allow you to download all of the re:Invent sessions from the catalog to a text file which you can then parse and manipulate in any way you wish. It also includes a column for whether you've starred the session or not.
 
