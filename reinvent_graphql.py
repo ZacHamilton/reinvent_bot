@@ -1,45 +1,43 @@
 import csv
-import os
 import requests
+from config import *
 
 from datetime import datetime, timedelta
-from utils import *
-# Using the Warrant package to handle generating correct SRP_A value
-from warrant import Cognito
+# Switched to pycognito because Warrant won't build anymore
+from pycognito import Cognito
 
-BOT_MODE = os.getenv('REINVENT_BOT_MODE', 'False')
-BOT_MODE = True if BOT_MODE == 'True' else False
-
-TWEET = os.getenv('REINVENT_TWEET', 'False')
-TWEET = True if TWEET == 'True' else False
-
-bot = ReinventBot() if BOT_MODE else ""
+bot = ""
 
 u = Cognito(
     COGNITO_POOL_ID, 
     COGNITO_CLIENT_ID,
-    username=AWS_EVENTS_USERNAME, 
-    user_pool_region="us-east-1"
+    username=AWS_EVENTS_USERNAME 
 )
 u.authenticate(password=AWS_EVENTS_PASSWORD)
 
+# Seems to be the same for the past couple years...
 url = "https://api.us-east-1.prod.events.aws.a2z.com/attendee/graphql"
 
 # Authentication token for accessing the GraphQL endpoint
 headers = {
-    "Authorization": u.access_token,
+    "Authorization": "Bearer " + u.access_token,
 }
+print("Access Token:")
+# print(u.access_token)
 
 # GraphQL query, 100 at a time, for AWS re:Invent sessions
+# One can modify the "query" by hitting F12 to trigger development tools while logged into AWS Events and finding the ListSessions text in one of the .js files... 
+#   From there you can see the complete schema available and tease out whatever additional details are needed
+# Can get the current eventId from F12 to trigger development tools while logged into AWS Events and finding a "query" in 
 body = {
     "operationName": "ListSessions",
     "variables": {
         "input": {
-            "eventId": "b84dca69-6995-4e60-bc3f-7bb7a6d170d1",
+            "eventId": "53b5de8d-7b9d-4fcc-a178-6433641075fe", 
             "maxResults": 100,
         }
     },
-    "query": "query ListSessions($input: ListSessionsInput!) {\n  listSessions(input: $input) {\n    results {\n      ...SessionFieldFragment\n      isConflicting {\n        reserved {\n          eventId\n          sessionId\n          isPaidSession\n          __typename\n        }\n        waitlisted {\n          eventId\n          sessionId\n          isPaidSession\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    totalCount\n    nextToken\n    __typename\n  }\n}\n\nfragment SessionFieldFragment on Session {\n  action\n  alias\n  createdAt\n  description\n  duration\n  endTime\n  eventId\n  isConflicting {\n    reserved {\n      alias\n      createdAt\n      eventId\n      name\n      sessionId\n      type\n      __typename\n    }\n    waitlisted {\n      alias\n      createdAt\n      eventId\n      name\n      sessionId\n      type\n      __typename\n    }\n    __typename\n  }\n  isEmbargoed\n  isFavoritedByMe\n  isPaidSession\n  isPaidSession\n  level\n  location\n  myReservationStatus\n  name\n  sessionId\n  startTime\n  status\n  type\n  capacities {\n    reservableRemaining\n    waitlistRemaining\n    __typename\n  }\n  customFieldDetails {\n    name\n    type\n    visibility\n    fieldId\n    ... on CustomFieldValueFlag {\n      enabled\n      __typename\n    }\n    ... on CustomFieldValueSingleSelect {\n      value {\n        fieldOptionId\n        name\n        __typename\n      }\n      __typename\n    }\n    ... on CustomFieldValueMultiSelect {\n      values {\n        fieldOptionId\n        name\n        __typename\n      }\n      __typename\n    }\n    ... on CustomFieldValueHyperlink {\n      text\n      url\n      __typename\n    }\n    __typename\n  }\n  package {\n    itemId\n    __typename\n  }\n  price {\n    currency\n    value\n    __typename\n  }\n  room {\n    name\n    venue {\n      name\n      __typename\n    }\n    __typename\n  }\n  sessionType {\n    name\n    __typename\n  }\n  tracks {\n    name\n    __typename\n  }\n  __typename\n}\n"
+    "query": "query ListSessions($input: ListSessionsInput!) {\n  listSessions(input: $input) {\n    results {\n      ...SessionFieldFragment\n      isConflicting {\n        reserved {\n          eventId\n          sessionId\n          isPaidSession\n          __typename\n        }\n        waitlisted {\n          eventId\n          sessionId\n          isPaidSession\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    totalCount\n    nextToken\n    __typename\n  }\n}\n\nfragment SessionFieldFragment on Session {\n  action\n  alias\n  createdAt\n  description\n  duration\n  endTime\n  eventId\n  isConflicting {\n    reserved {\n      alias\n      createdAt\n      eventId\n      name\n      sessionId\n      type\n      __typename\n    }\n    waitlisted {\n      alias\n      createdAt\n      eventId\n      name\n      sessionId\n      type\n      __typename\n    }\n    __typename\n  }\n  isEmbargoed\n  isFavoritedByMe\n  isPaidSession\n  isPaidSession\n  level\n  location\n  myReservationStatus\n  name\n  sessionId\n  startTime\n  status\n  type\n  capacities {\n    reservableRemaining\n    waitlistRemaining\n    __typename\n  }\n  customFieldDetails {\n    name\n    type\n    visibility\n    fieldId\n    ... on CustomFieldValueFlag {\n      enabled\n      __typename\n    }\n    ... on CustomFieldValueSingleSelect {\n      value {\n        fieldOptionId\n        name\n        __typename\n      }\n      __typename\n    }\n    ... on CustomFieldValueMultiSelect {\n      values {\n        fieldOptionId\n        name\n        __typename\n      }\n      __typename\n    }\n    ... on CustomFieldValueHyperlink {\n      text\n      url\n      __typename\n    }\n    __typename\n  }\n  package {\n    itemId\n    __typename\n  }\n  price {\n    currency\n    value\n    __typename\n  }\n  room {\n    name\n    venue {\n      name\n      __typename\n    }\n    __typename\n  }\n  sessionType {\n    name\n    __typename\n  }\n  tracks {\n    name\n    __typename\n  }\n  speakers {\n  jobTitle\n  companyName\n   user {\n    firstName\n lastName\n    __typename\n  }\n  __typename\n  }\n  __typename\n}\n"
 }
 
 next_token = True
@@ -54,6 +52,7 @@ while next_token:
         json=body,
     )
     response_data = response.json()
+
     print("    Total Returned:", len(response_data["data"]["listSessions"]["results"]))
     sessions = sessions + response_data["data"]["listSessions"]["results"]
 
@@ -63,91 +62,93 @@ while next_token:
         body["variables"]["input"]["nextToken"] = response_data["data"]["listSessions"]["nextToken"]
     else:
         next_token = False
+    # next_token = False # for testing of one iteration
 
-if not BOT_MODE:
-    # Open a blank text file to write sessions to
-    sessions_file = open("sessions.csv","w")
-    sessions_writer = csv.writer(sessions_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    sessions_writer.writerow([
-        "Session Number", 
-        "Session Title", 
-        "Session Interest", 
-        "Start Time", 
-        "End Time", 
-        "Room and Building"
+
+# Open a blank text file to write sessions to
+sessions_file = open("sessions.csv","w")
+sessions_writer = csv.writer(sessions_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+sessions_writer.writerow([
+    "Session Number", 
+    "Session Title", 
+    "Session Interest", 
+    "Start Time", 
+    "End Time", 
+    "Room and Building",
+    "Venue",
+    "Description",
+    "Level",
+    "Type",
+    "Speaker Company",
+    "Tracks"
     ])
 
+# Iterate thru sessions writing to file
 for session in sessions:
     session_number = session["alias"]
     session_name = session["name"]
-    venue_name = session['room']['venue']['name'] if session['room']['venue'] is not None else ""
-    room_name = session['room']['name'] if session['room']['name'] is not None else ""
+    session_description = session["description"].encode("utf-8") if session['description'] is not None else "n/a"
+    session_level = session["level"]  if session['level'] is not None else "n/a"
+    session_type = session['sessionType']['name']  if session['sessionType'] is not None else "n/a"
+    session_speaker_company = ""
+
+    if "speakers" in session and session['speakers'] is not None:
+        for speaker in session['speakers']:
+            for key, value in speaker.items():
+                if key == "companyName":
+                    session_speaker_company = session_speaker_company + value + ","
+    else:
+       session_speaker_company = "n/a"
+
+    session_tracks = "" #session["tracks"]["name"]  if session["tracks"] is not None else "n/a"
+
+    #print("Session Name: " + session_name)
+    venue_name = session['room']['venue']['name'] if session['room'] is not None and session['room']['venue'] is not None else "n/a"
+    room_name = session['room']['name'] if session['room'] is not None and session['room']['name'] is not None else "n/a"
     room_building = f"{venue_name} - {room_name}"
+    
     if session["startTime"] is not None:
         start_time = datetime.fromtimestamp(session["startTime"]/1000)
         end_time = start_time + timedelta(minutes=session["duration"])
-        start_time = start_time.strftime("%b %d, %Y, %I:%M %p")
-        end_time = end_time.strftime("%b %d, %Y, %I:%M %p")
+        start_time = start_time.strftime("%x %X")
+        end_time = end_time.strftime("%x %X")
     else:
         start_time = "0"
         end_time = "0"
+
     session_info = {
         "session_number": session_number,
         "session_title": session_name,
         "start_time": start_time,
         "end_time": end_time,
         "room_building": room_building,
+        "venue": venue_name,
+        "session_description": session_description,
+        "session_level": session_level,
+        "session_type": session_type,
+        "session_speaker_company": session_speaker_company,
+        "session_tracks": session_tracks
     }
-    print(session_number, session_name)
-    # If we're running in BOT mode, we should handle storing the sessions
-    # and tweeting out updates.
-    if BOT_MODE:
-        new = bot.check_if_new(str(session_number))
-        # If the session is not new and I can't get the session timing,
-        # I have no way to verify if the session is updated. Exit the loop
-        # and continue onwards.
-        if (new == False and start_time == 0):
-            continue
 
-        if (new == True):
-            if ("embargo" not in session_name and not session["isEmbargoed"]):
-                session_info['version'] = "1"
-                bot.store_session(session_info)
-                if TWEET:
-                    tweet = "NEW AWS #reInvent session: {!s} - {!s}".format(session_info['session_number'], \
-                        session_info['session_title'])
-                    print(tweet)
-                    status = bot.send_tweet(tweet)
-                    print(status)
-        else:
-            update, what_changed = bot.check_if_updated(str(session_number), session_info)
-            if (update != False):
-                print("Session exists in table but needs to be updated!")
-                session_info['version'] = str(update)
-                bot.store_session(session_info)
+    if (session["isFavoritedByMe"] == False):
+        session_interest = False
+    else:
+        session_interest = True
 
-                if TWEET:
-                    tweet = "UPDATED {!s} for #reInvent session: {!s} - {!s}".format(what_changed, \
-                        session_info['session_number'], session_info['session_title'])
-                    print(tweet)
-                    status = bot.send_tweet(tweet)
-                    print(status)
+    sessions_writer.writerow([
+        session_number, 
+        session_name, 
+        session_interest, 
+        start_time, 
+        end_time, 
+        room_building,
+        venue_name,
+        session_description,
+        session_level,
+        session_type,
+        session_speaker_company,
+        session_tracks
+    ])
 
-    # If we're not in BOT mode, we should write to a file.
-    elif not BOT_MODE:
-        if (session["isFavoritedByMe"] == False):
-            session_interest = False
-        else:
-            session_interest = True
-
-        sessions_writer.writerow([
-            session_number, 
-            session_name, 
-            session_interest, 
-            start_time, 
-            end_time, 
-            room_building
-        ])
-
-if not BOT_MODE:
-    sessions_file.close()
+# Close out file for use
+sessions_file.close()
