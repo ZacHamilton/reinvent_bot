@@ -20,15 +20,16 @@
 ## How this script works
 
 With the launch of the re:Invent catalog for 2022, there are some exciting changes that make this process easier!  EventID for new re:Invent can be had here:
- <img link="GatherEventID.jpg" />
 
-- Authentication to the AWS Events site (& therefore, the re:Invent Portal) are handled via AWS Cognito.  Can be gathered via 
+![Get EventID](GatherEventID.jpg)
+
+- Authentication to the AWS Events site (& therefore, the re:Invent Portal) are handled via AWS Cognito.
 - The Session data is stored in a GraphQL database and accessible via a simple API call.
 - The GraphQL data is protected by credentials provided when authenticating with Cognito, available via each user's specific login to the portal.
 - Once the GraphQL token is retrieved from Cognito, the sessions list is pulled via a few simple API calls
 - The `example_sessions_api_response.json` file contains example session data as it is returned from the API.
 - Here is the schema for the sessions data passed down:
-
+```javascript
 fragment SessionFieldFragment on Session {
     action
     alias
@@ -124,6 +125,6 @@ fragment SessionFieldFragment on Session {
       name
     }
   }
-
+```
   More detail on available schemas and queries can be had by reviewing at your leiser this file:
-  <img link="GatherSchema.jpg" />
+  ![Get GraphQL Schemas](GatherSchema.jpg)
